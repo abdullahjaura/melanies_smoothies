@@ -38,15 +38,27 @@ if ingredients:
 
         st.subheader(fruit_chosen + " Nutrition Information")
 
+        api_fruit_name = fruit_chosen.lower()
+
+        if api_fruit_name == "apples":
+            api_fruit_name = "apple"
+
         smoothiefroot_response = requests.get(
-            "https://my.smoothiefroot.com/api/fruit/" + fruit_chosen
+            "https://my.smoothiefroot.com/api/fruit/" + api_fruit_name,
+            timeout=20,
         )
 
-        sf_df = session.create_dataframe(
-            data=[smoothiefroot_response.json()["nutrition"]]
-        )
+        fruit_data = smoothiefroot_response.json()
 
-        st.dataframe(sf_df, use_container_width=True)
+        if "nutrition" in fruit_data:
+            sf_df = session.create_dataframe(
+                data=[fruit_data["nutrition"]]
+            )
+            st.dataframe(sf_df, use_container_width=True)
+        else:
+            st.warning(
+                "Nutrition information is unavailable for " + fruit_chosen
+            )
 
     my_insert_stmt = """insert into smoothies.public.orders
         (ingredients, name_on_order)
@@ -60,4 +72,3 @@ if ingredients:
             "Your Smoothie is ordered, " + name_on_order + "!",
             icon="✅",
         )
-
