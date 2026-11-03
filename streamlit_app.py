@@ -36,6 +36,18 @@ if ingredients:
     for fruit_chosen in ingredients:
         ingredients_string += fruit_chosen + " "
 
+        st.subheader(fruit_chosen + " Nutrition Information")
+
+        smoothiefroot_response = requests.get(
+            "https://my.smoothiefroot.com/api/fruit/" + fruit_chosen
+        )
+
+        sf_df = session.create_dataframe(
+            data=[smoothiefroot_response.json()["nutrition"]]
+        )
+
+        st.dataframe(sf_df, use_container_width=True)
+
     my_insert_stmt = """insert into smoothies.public.orders
         (ingredients, name_on_order)
         values ('""" + ingredients_string + """', '""" + name_on_order + """')"""
@@ -49,16 +61,3 @@ if ingredients:
             icon="✅",
         )
 
-smoothiefroot_response = requests.get(
-    "https://my.smoothiefroot.com/api/fruit/watermelon"
-)
-
-st.text(smoothiefroot_response)
-
-st.json(smoothiefroot_response.json())
-
-sf_df = session.create_dataframe(
-    data=[smoothiefroot_response.json()]
-)
-
-st.dataframe(sf_df, use_container_width=True)
