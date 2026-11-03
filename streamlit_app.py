@@ -18,9 +18,14 @@ my_dataframe = session.table(
     "smoothies.public.fruit_options"
 ).select(col("FRUIT_NAME"))
 
+fruit_names = [
+    row["FRUIT_NAME"]
+    for row in my_dataframe.collect()
+]
+
 ingredients = st.multiselect(
     "Choose up to 5 ingredients:",
-    options=my_dataframe,
+    options=fruit_names,
     max_selections=5,
 )
 
