@@ -24,6 +24,37 @@ fruit_names = [
     for row in my_dataframe.collect()
 ]
 
+api_names = {
+    "apples": "apple",
+    "bananas": "banana",
+    "blueberries": "blueberry",
+    "cantaloupe": "cantaloupe",
+    "cherries": "cherry",
+    "dragon fruit": "dragonfruit",
+    "elderberries": "elderberry",
+    "figs": "figs",
+    "guava": "guava",
+    "honeydew": "honeydew",
+    "jackfruit": "jackfruit",
+    "kiwi": "kiwi",
+    "lime": "lime",
+    "mango": "mango",
+    "nectarine": "nectarine",
+    "orange": "orange",
+    "papaya": "papaya",
+    "quince": "quince",
+    "raspberries": "raspberry",
+    "strawberries": "strawberry",
+    "tangerine": "tangerine",
+    "ugli fruit": "ugli fruit (jamaican tangelo)",
+    "vanilla": "vanilla fruit",
+    "vanilla fruit": "vanilla fruit",
+    "watermelon": "watermelon",
+    "ximenia": "ximenia (hog plum)",
+    "yangmei": "yangmei (waxberry)",
+    "ziziphus": "ziziphus jujube",
+}
+
 ingredients = st.multiselect(
     "Choose up to 5 ingredients:",
     options=fruit_names,
@@ -38,26 +69,34 @@ if ingredients:
 
         st.subheader(fruit_chosen + " Nutrition Information")
 
-        api_fruit_name = fruit_chosen.lower()
+        fruit_key = fruit_chosen.strip().lower()
+        api_fruit_name = api_names.get(fruit_key, fruit_key)
 
-        if api_fruit_name == "apples":
-            api_fruit_name = "apple"
-
-        smoothiefroot_response = requests.get(
-            "https://my.smoothiefroot.com/api/fruit/" + api_fruit_name,
-            timeout=20,
-        )
-
-        fruit_data = smoothiefroot_response.json()
-
-        if "nutrition" in fruit_data:
-            sf_df = session.create_dataframe(
-                data=[fruit_data["nutrition"]]
+        try:
+            smoothiefroot_response = requests.get(
+                "https://my.smoothiefroot.com/api/fruit/"
+                + api_fruit_name,
+                timeout=20,
             )
-            st.dataframe(sf_df, use_container_width=True)
-        else:
+
+            smoothiefroot_response.raise_for_status()
+            fruit_data = smoothiefroot_response.json()
+
+            if fruit_data.get("nutrition"):
+                sf_df = session.create_dataframe(
+                    data=[fruit_data["nutrition"]]
+                )
+                st.dataframe(sf_df, use_container_width=True)
+            else:
+                st.warning(
+                    "Nutrition information is unavailable for "
+                    + fruit_chosen
+                )
+
+        except (requests.exceptions.RequestException, ValueError):
             st.warning(
-                "Nutrition information is unavailable for " + fruit_chosen
+                "Could not retrieve nutrition information for "
+                + fruit_chosen
             )
 
     my_insert_stmt = """insert into smoothies.public.orders
