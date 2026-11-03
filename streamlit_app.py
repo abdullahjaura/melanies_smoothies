@@ -1,24 +1,44 @@
 import streamlit as st
+from snowflake.snowpark.functions import col
 
-st.title("Snowflake connection test")
+st.title("Customize Your Smoothie! :cup_with_straw:")
+st.write("Choose the fruits you want in your custom Smoothie!")
 
-try:
-    st.write("Connecting to Snowflake…")
-    cnx = st.connection(
+name_on_order = st.text_input("Name on Smoothie:")
+st.write("The name on your Smoothie will be:", name_on_order)
+
+cnx = st.connection(
     "snowflake",
     login_timeout=20,
     socket_timeout=20,
 )
-    session = cnx.session()
-    st.success("Connected to Snowflake!")
+session = cnx.session()
 
-    rows = session.table(
-        "SMOOTHIES.PUBLIC.FRUIT_OPTIONS"
-    ).collect()
+my_dataframe = session.table(
+    "smoothies.public.fruit_options"
+).select(col("FRUIT_NAME"))
 
-    st.success(f"Loaded {len(rows)} fruits!")
-    st.dataframe(rows)
+ingredients = st.multiselect(
+    "Choose up to 5 ingredients:",
+    options=my_dataframe,
+    max_selections=5,
+)
 
-except Exception as error:
-    st.error("The Snowflake test failed.")
-    st.exception(error)
+if ingredients:
+    ingredients_string = ""
+
+    for fruit_chosen in ingredients:
+        ingredients_string += fruit_chosen + " "
+
+    my_insert_stmt = """insert into smoothies.public.orders
+        (ingredients, name_on_order)
+        values ('""" + ingredients_string + """', '""" + name_on_order + """')"""
+
+    time_to_insert = st.button("Submit Order")
+
+    if time_to_insert:
+        session.sql(my_insert_stmt).collect()
+        st.success(
+            "Your Smoothie is ordered, " + name_on_order + "!",
+            icon="✅",
+        )
