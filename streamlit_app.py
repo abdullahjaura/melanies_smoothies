@@ -4,7 +4,11 @@ st.title("Snowflake connection test")
 
 try:
     st.write("Connecting to Snowflake…")
-    cnx = st.connection("snowflake")
+    cnx = st.connection(
+    "snowflake",
+    login_timeout=20,
+    socket_timeout=20,
+)
     session = cnx.session()
     st.success("Connected to Snowflake!")
 
