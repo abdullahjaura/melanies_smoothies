@@ -48,3 +48,21 @@ if ingredients:
             "Your Smoothie is ordered, " + name_on_order + "!",
             icon="✅",
         )
+
+
+smoothiefroot_response = requests.get(
+    "https://my.smoothiefroot.com/api/fruit/watermelon"
+)
+
+# Display the response status
+st.text(smoothiefroot_response)
+
+# Display the JSON contents
+st.json(smoothiefroot_response.json())
+
+# Convert the JSON into a Snowpark dataframe
+sf_df = session.create_dataframe(
+    data=[smoothiefroot_response.json()]
+)
+
+st.dataframe(sf_df, use_container_width=True)
